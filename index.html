@@ -9,11 +9,14 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
-body { margin:0; font-family:'Cairo', sans-serif; background: linear-gradient(135deg, #ffc0cb, #ffb6c1, #ff69b4); text-align:center; overflow-x:hidden; min-height: 100vh; }
+body { margin:0; font-family:'Cairo', sans-serif; background: linear-gradient(135deg, #ffc0cb, #ffb6c1, #ff69b4); text-align:center; overflow-x:hidden; min-height: 100vh; position:relative; }
 .page { height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; position:relative; overflow:hidden; }
 .box { background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); padding:30px; border-radius:25px; width:85%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.3); transition:0.3s all ease; z-index: 10; position: absolute; }
 button { margin-top:20px; padding:10px 20px; border:none; border-radius:10px; background:#ff69b4; color:white; font-size:16px; cursor:pointer; font-family: 'Cairo', sans-serif; font-weight: bold; transition:0.3s; }
 button:hover { transform:scale(1.05); background:#ff1493;}
+button:active { transform:scale(0.95); }
+.shake { animation:shake 0.3s; }
+@keyframes shake { 0%{transform:translate(0)} 25%{transform:translate(-5px)} 50%{transform:translate(5px)} 75%{transform:translate(-5px)} 100%{transform:translate(0)} }
 input, textarea { margin-top:15px; padding:10px; border-radius:8px; border:1px solid pink; width:80%; text-align:center; font-size:16px; font-family: 'Cairo', sans-serif;}
 .confetti-piece { position:absolute; width:10px; height:10px; z-index: 999; }
 .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
@@ -26,9 +29,8 @@ input, textarea { margin-top:15px; padding:10px; border-radius:8px; border:1px s
 
 <div id="page1" class="page">
   <div id="welcomeBox" class="box">
-    <h2>❤️ كل عام وأنتم بخير ❤️</h2>
-    <p>مرحباً بكم في فعالية عائلة لولو</p>
-    <button onclick="goNext()">الدخول للفعالية</button>
+    <h2>❤️ كل عام وانتم بخير ❤️</h2>
+    <button onclick="moveBox()" tabindex="-1">اضغط هنا</button>
   </div>
 </div>
 
@@ -93,6 +95,33 @@ input, textarea { margin-top:15px; padding:10px; border-radius:8px; border:1px s
 <div id="confettiContainer"></div>
 
 <script>
+// --- 0. المقلب (المربع الهارب) ---
+let clicks = 0;
+function moveBox() {
+  const box = document.getElementById("welcomeBox");
+  clicks++;
+  box.classList.add("shake");
+  setTimeout(() => { box.classList.remove("shake"); }, 300);
+  
+  if(clicks == 4) {
+    box.innerHTML = `<h2>خلاص أمزح 😆</h2>
+    <button onclick="goNext()">آخر مرة اضغط هنا</button>`;
+    box.style.position = "relative";
+    box.style.left = "auto";
+    box.style.top = "auto";
+    return;
+  }
+  
+  const maxX = window.innerWidth - box.offsetWidth - 20;
+  const maxY = window.innerHeight - box.offsetHeight - 20;
+  const x = Math.max(10, Math.random() * maxX);
+  const y = Math.max(10, Math.random() * maxY);
+  
+  box.style.position = "absolute";
+  box.style.left = x + "px";
+  box.style.top = y + "px";
+}
+
 // --- 1. إعدادات المستخدمين ---
 const users = {
   "2004":"شهد", "2008":"علياء", "2007":"راكان", "2011":"فارس",
@@ -148,19 +177,21 @@ async function checkCode() {
   
   if(input === adminCode) {
     loading.style.display = "block";
-    
-    // جلب القرعة والأمنيات للمشرف
-    const docSnap = await drawDoc.get();
-    const wishesSnap = await wishesDoc.get();
-    
-    loading.style.display = "none";
-    
-    document.getElementById("page2").style.display = "none";
-    document.getElementById("pageAdmin").style.display = "flex";
-    
-    // رسم الجداول
-    renderAdminTable(docSnap.exists ? docSnap.data().draw : {});
-    renderAdminWishes(wishesSnap.exists ? wishesSnap.data() : {});
+    try {
+      const docSnap = await drawDoc.get();
+      const wishesSnap = await wishesDoc.get();
+      loading.style.display = "none";
+      
+      document.getElementById("page2").style.display = "none";
+      document.getElementById("pageAdmin").style.display = "flex";
+      
+      renderAdminTable(docSnap.exists ? docSnap.data().draw : {});
+      renderAdminWishes(wishesSnap.exists ? wishesSnap.data() : {});
+    } catch (error) {
+      loading.style.display = "none";
+      msg.innerText = "فشل الاتصال! تأكد من تعديل الـ Rules في فايربيس إلى true.";
+      msg.style.color = "red";
+    }
     return;
   }
 
@@ -187,13 +218,12 @@ async function checkCode() {
       document.getElementById("receiver").innerText = currentReceiver;
       document.getElementById("receiverNameHint").innerText = currentReceiver;
 
-      // جلب الأمنيات
       loadWishes();
       createConfetti();
       
     } catch(e) {
       loading.style.display = "none";
-      msg.innerText = "تأكد من إعدادات القواعد (Security Rules) في فايربيس.";
+      msg.innerText = "فشل الاتصال! تأكد من تعديل الـ Rules في فايربيس إلى true.";
       msg.style.color = "red";
       console.error(e);
     }
@@ -203,7 +233,7 @@ async function checkCode() {
   }
 }
 
-// --- حفظ وقراءة الأمنيات للمستخدم العادي ---
+// --- حفظ وقراءة الأمنيات ---
 async function loadWishes() {
   const wishesSnap = await wishesDoc.get();
   if(wishesSnap.exists) {
@@ -222,7 +252,7 @@ async function saveWishes() {
   setTimeout(() => savedMsg.style.display = "none", 3000);
 }
 
-// --- لوحة الإشراف والدوال الخاصة بها ---
+// --- لوحة الإشراف ---
 async function generateNewDraw() {
   const names = Object.values(users);
   let validDraw = false;
@@ -274,7 +304,6 @@ function renderAdminTable(drawData) {
   }
 }
 
-// دالة جديدة لرسم جدول الأمنيات في لوحة الإشراف
 function renderAdminWishes(wishesData) {
   const tbody = document.getElementById("adminWishesTbody");
   tbody.innerHTML = "";
