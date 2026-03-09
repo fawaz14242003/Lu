@@ -3,141 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة الدخول - الهدايا</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <title>صفحة الهدايا - لولو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* إعدادات الصفحة الأساسية والخلفية */
+        /* الإعدادات الأساسية */
         body {
             margin: 0;
             padding: 0;
-            min-height: 100vh;
+            background-color: #fdf5f8; /* لون خلفية وردي فاتح جداً */
+            font-family: 'Tajawal', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
-            font-family: 'Tajawal', sans-serif;
-            background: linear-gradient(180deg, #fcd3e1 0%, #f4a1c1 100%);
-            overflow: hidden; /* لمنع ظهور أشرطة التمرير بسبب الأشكال الجانبية */
+            min-height: 100vh;
+            overflow-x: hidden;
             position: relative;
         }
 
-        /* زينة الخلفية (خفيفة جداً على المعالج ولا تسبب تعليق) */
-        .decoration {
-            position: absolute;
-            font-size: 30px;
-            opacity: 0.8;
-            z-index: 1;
-            user-select: none;
+        /* حاوية التطبيق (شكل الجوال) */
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
         }
-        .d1 { top: 10%; left: 20%; transform: rotate(-15deg); }
-        .d2 { top: 15%; right: 25%; font-size: 40px; }
-        .d3 { top: 25%; left: 40%; font-size: 25px; }
-        .d4 { bottom: 15%; right: 15%; transform: rotate(20deg); font-size: 35px; }
-        .d5 { bottom: 20%; left: 10%; transform: rotate(-10deg); }
-        .d6 { top: 40%; right: 10%; font-size: 20px; }
 
-        /* الصندوق الأبيض الرئيسي */
-        .welcome-card {
-            background-color: #ffffff;
-            border-radius: 25px;
-            padding: 40px 25px;
-            width: 85%;
-            max-width: 350px;
+        /* العناوين العلوية */
+        .header-title {
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            position: relative;
-            z-index: 10; /* لإبقاء الصندوق فوق زينة الخلفية */
-        }
-
-        /* تنسيق النصوص */
-        .hadith-text {
-            font-size: 16px;
+            color: #d46096;
+            font-size: 24px;
             font-weight: 700;
-            color: #222;
-            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .header-subtitle {
+            text-align: center;
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
             margin-bottom: 20px;
         }
 
-        .description-text {
-            font-size: 15px;
-            color: #555;
-            line-height: 1.7;
-            margin-bottom: 30px;
+        /* صندوق اسم المهدى إليه */
+        .target-name-box {
+            background-color: #f8cddf;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .target-name-box h1 {
+            color: #d42a77;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
         }
 
-        .description-text strong {
-            color: #222;
-            display: block;
-            margin-top: 5px;
+        /* صندوق أمنيات المهدى إليه */
+        .wishlist-box {
+            background-color: #ffffff;
+            border: 2px dashed #f1a9c8;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .wishlist-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #111;
+        }
+        .wishlist-box p {
+            margin: 0;
+            color: #888;
+            font-size: 14px;
         }
 
-        /* تنسيق مربع الإدخال */
-        .input-field {
+        /* قسم اختيار الهدايا */
+        .selection-section {
+            background-color: #fcecf2;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+        .selection-section h3 {
+            margin: 0 0 20px 0;
+            font-size: 16px;
+            color: #111;
+        }
+
+        /* شبكة أزرار الهدايا */
+        .gifts-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .gift-item {
+            background-color: #fbdbec;
+            border: 2px solid transparent;
+            border-radius: 15px;
+            width: calc(33% - 15px);
+            min-width: 80px;
+            padding: 15px 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .gift-item:hover {
+            transform: translateY(-3px);
+        }
+        /* كلاس التحديد (الذي يظهر عند الضغط على الهدية) */
+        .gift-item.selected {
+            border-color: #d42a77;
+            background-color: #f8cddf;
+        }
+        
+        .gift-icon {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        .gift-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* ملاحظة ومربع الكتابة */
+        .hint-text {
+            color: #d46096;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        .custom-gift-input {
             width: 100%;
             box-sizing: border-box;
-            padding: 15px;
-            border: 1px solid #eab8ce;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 15px;
-            font-family: inherit;
-            margin-bottom: 25px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-
-        .input-field:focus {
-            border-color: #d86b9f;
-        }
-
-        .input-field::placeholder {
-            color: #b0b0b0;
-        }
-
-        /* تنسيق زر الدخول */
-        .enter-button {
-            background-color: #e571a8;
-            color: #ffffff;
             border: none;
-            border-radius: 12px;
-            padding: 12px 50px;
-            font-size: 18px;
-            font-weight: 700;
+            border-radius: 15px;
+            padding: 15px;
             font-family: inherit;
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.1s;
+            font-size: 14px;
+            resize: none;
+            height: 100px;
+            outline: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .custom-gift-input::placeholder {
+            color: #ccc;
         }
 
-        .enter-button:hover {
-            background-color: #d46096;
+        /* --- تأثيرات المربعات المتساقطة (خفيفة جداً ولا تسبب تعليق) --- */
+        .confetti {
+            position: fixed;
+            top: -10px;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+            animation: fall linear forwards;
+            z-index: 1;
         }
-
-        .enter-button:active {
-            transform: scale(0.95); /* تأثير ضغطة الزر */
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="decoration d1">🎉</div>
-    <div class="decoration d2">🎊</div>
-    <div class="decoration d3">💖</div>
-    <div class="decoration d4">🎈</div>
-    <div class="decoration d5">🎉</div>
-    <div class="decoration d6">✨</div>
+    <div id="confetti-container"></div>
 
-    <div class="welcome-card">
-        <p class="hadith-text">كما أوصانا النبي ﷺ (تهادوا تحابوا)</p>
-        
-        <p class="description-text">
-            ولتجديد ذكرى الفعالية ولإشباع فضولك حيال من ستهدي
-            <strong>ضع سنة ميلادك بالهجري</strong>
-        </p>
-        
-        <input type="text" class="input-field" placeholder="مثال: ١٤٢٠">
-        
-        <button class="enter-button">دخول</button>
+    <div class="app-container">
+        <div class="header-title">لولو</div>
+        <div class="header-subtitle">انت ستهدي</div>
+
+        <div class="target-name-box">
+            <h1>فارس</h1>
+        </div>
+
+        <div class="wishlist-box">
+            <h3>أمنيات فارس للهدايا: 🎁</h3>
+            <p>(لم يكتب أمنياته بعد)</p>
+        </div>
+
+        <div class="selection-section">
+            <h3>أكتب الهدايا التي ترغب بها: 💌</h3>
+            
+            <div class="gifts-grid">
+                <div class="gift-item" onclick="toggleSelection(this)">
+                    <span class="gift-icon">💄</span>
+                    <span class="gift-name">ميكب</span>
+                </div>
+                <div class="gift-item selected" onclick="toggleSelection(this)">
+                    <span class="gift-icon">💰</span>
+                    <span class="gift-name">روبلوكس</span>
+                </div>
+                <div class="gift-item" onclick="toggleSelection(this)">
+                    <span class="gift-icon">🎧</span>
+                    <span class="gift-name">سماعه طبيه</span>
+                </div>
+                <div class="gift-item" onclick="toggleSelection(this)">
+                    <span class="gift-icon">❤️‍🔥</span>
+                    <span class="gift-name">عطور</span>
+                </div>
+                <div class="gift-item" onclick="toggleSelection(this)">
+                    <span class="gift-icon">🧰</span>
+                    <span class="gift-name">بسطار</span>
+                </div>
+            </div>
+
+            <div class="hint-text">(اضغط على المربعات أو اكتب هديتك بنفسك)</div>
+            
+            <textarea class="custom-gift-input" placeholder="اكتب هنا..."></textarea>
+        </div>
     </div>
 
+    <script>
+        // 1. وظيفة تحديد/إلغاء تحديد الهدايا
+        function toggleSelection(element) {
+            element.classList.toggle('selected');
+        }
+
+        // 2. نظام المربعات المتساقطة (مُحسن وخفيف جداً)
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            const colors = ['#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#f1c40f', '#e67e22'];
+            
+            // إنشاء 30 مربع فقط (عدد قليل لا يسبب تعليق)
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    
+                    // خصائص عشوائية للمربع
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's'; // سرعة السقوط بين 2 لـ 5 ثواني
+                    
+                    container.appendChild(confetti);
+
+                    // حذف المربع بعد انتهاء سقوطه لتنظيف الذاكرة ومنع التعليق
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 5000); 
+
+                }, i * 150); // تأخير بسيط بين ظهور كل مربع والآخر
+            }
+        }
+
+        // تشغيل تأثير المربعات عند فتح الصفحة
+        window.onload = createConfetti;
+    </script>
 </body>
 </html>
