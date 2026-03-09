@@ -3,264 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>صفحة الهدايا - لولو</title>
+    <title>شاشة الدخول</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
-        /* الإعدادات الأساسية */
+        /* إعدادات الخلفية المطابقة للصورة */
         body {
             margin: 0;
             padding: 0;
-            background-color: #fdf5f8; /* لون خلفية وردي فاتح جداً */
-            font-family: 'Tajawal', sans-serif;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            align-items: center;
+            font-family: 'Tajawal', sans-serif;
+            /* تدرج لوني وردي مطابق للصورة */
+            background: linear-gradient(180deg, #fad1e1 0%, #f49bbb 100%);
+            overflow: hidden; 
             position: relative;
         }
 
-        /* حاوية التطبيق (شكل الجوال) */
-        .app-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
+        /* زينة الخلفية (بدون جافاسكريبت لمنع التعليق) */
+        .bg-icon {
+            position: absolute;
+            font-size: 28px;
+            user-select: none;
+            opacity: 0.9;
+            /* حركة طفو خفيفة وناعمة */
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* توزيع الأشكال كما في الصورة تقريباً */
+        .icon-1 { top: 12%; right: 15%; font-size: 35px; animation-delay: 0s; }
+        .icon-2 { top: 18%; right: 40%; font-size: 30px; animation-delay: 1s; }
+        .icon-3 { top: 15%; left: 35%; font-size: 28px; animation-delay: 0.5s; }
+        .icon-4 { top: 25%; left: 10%; font-size: 32px; animation-delay: 1.5s; }
+        .icon-5 { bottom: 25%; right: 15%; font-size: 30px; animation-delay: 0.2s; }
+        .icon-6 { bottom: 15%; right: 30%; font-size: 25px; animation-delay: 1.2s; }
+        .icon-7 { bottom: 20%; left: 10%; font-size: 35px; animation-delay: 0.8s; } /* بالون أحمر */
+        .icon-8 { bottom: 5%; left: 20%; font-size: 30px; animation-delay: 1.8s; }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        /* الصندوق الأبيض بالمنتصف */
+        .modal-card {
+            background-color: #ffffff;
+            border-radius: 25px;
+            padding: 40px 20px;
+            width: 88%;
+            max-width: 360px;
+            text-align: center;
+            /* ظل ناعم يعطي عمق وجمالية للصندوق */
+            box-shadow: 0 15px 35px rgba(212, 96, 150, 0.2);
             z-index: 10;
         }
 
-        /* العناوين العلوية */
-        .header-title {
-            text-align: center;
-            color: #d46096;
-            font-size: 24px;
+        /* تنسيق النصوص داخل الصندوق */
+        .hadith-text {
+            font-size: 17px;
             font-weight: 700;
-            margin-bottom: 5px;
+            color: #222;
+            margin-top: 0;
+            margin-bottom: 20px;
         }
-        .header-subtitle {
-            text-align: center;
+
+        .description-text {
+            font-size: 15px;
             color: #333;
-            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 30px;
             font-weight: 500;
-            margin-bottom: 20px;
         }
 
-        /* صندوق اسم المهدى إليه */
-        .target-name-box {
-            background-color: #f8cddf;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .target-name-box h1 {
-            color: #d42a77;
-            margin: 0;
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        /* صندوق أمنيات المهدى إليه */
-        .wishlist-box {
-            background-color: #ffffff;
-            border: 2px dashed #f1a9c8;
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .wishlist-box h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            color: #111;
-        }
-        .wishlist-box p {
-            margin: 0;
-            color: #888;
-            font-size: 14px;
-        }
-
-        /* قسم اختيار الهدايا */
-        .selection-section {
-            background-color: #fcecf2;
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-        }
-        .selection-section h3 {
-            margin: 0 0 20px 0;
-            font-size: 16px;
-            color: #111;
-        }
-
-        /* شبكة أزرار الهدايا */
-        .gifts-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .gift-item {
-            background-color: #fbdbec;
-            border: 2px solid transparent;
-            border-radius: 15px;
-            width: calc(33% - 15px);
-            min-width: 80px;
-            padding: 15px 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .gift-item:hover {
-            transform: translateY(-3px);
-        }
-        /* كلاس التحديد (الذي يظهر عند الضغط على الهدية) */
-        .gift-item.selected {
-            border-color: #d42a77;
-            background-color: #f8cddf;
-        }
-        
-        .gift-icon {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-        .gift-name {
-            font-size: 12px;
-            font-weight: 700;
-            color: #333;
-        }
-
-        /* ملاحظة ومربع الكتابة */
-        .hint-text {
-            color: #d46096;
-            font-size: 12px;
-            margin-bottom: 15px;
-        }
-        .custom-gift-input {
-            width: 100%;
-            box-sizing: border-box;
-            border: none;
-            border-radius: 15px;
+        /* حقل إدخال سنة الميلاد */
+        .year-input {
+            width: 85%;
             padding: 15px;
+            border: 1px solid #f3c2d6;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 15px;
             font-family: inherit;
-            font-size: 14px;
-            resize: none;
-            height: 100px;
+            margin-bottom: 25px;
             outline: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
-        .custom-gift-input::placeholder {
-            color: #ccc;
+            background-color: #fff;
+            transition: all 0.3s ease;
         }
 
-        /* --- تأثيرات المربعات المتساقطة (خفيفة جداً ولا تسبب تعليق) --- */
-        .confetti {
-            position: fixed;
-            top: -10px;
-            width: 10px;
-            height: 10px;
-            background-color: #f00;
-            opacity: 0.7;
-            animation: fall linear forwards;
-            z-index: 1;
+        .year-input:focus {
+            border-color: #e571a8;
+            box-shadow: 0 0 8px rgba(229, 113, 168, 0.3);
         }
-        @keyframes fall {
-            to {
-                transform: translateY(100vh) rotate(360deg);
-            }
+
+        .year-input::placeholder {
+            color: #c4c4c4;
+        }
+
+        /* زر الدخول */
+        .login-btn {
+            background-color: #e871ab; /* لون مطابق للصورة */
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 55px;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(232, 113, 171, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .login-btn:hover {
+            background-color: #d85c98;
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(1px);
         }
     </style>
 </head>
 <body>
 
-    <div id="confetti-container"></div>
+    <div class="bg-icon icon-1">💖</div>
+    <div class="bg-icon icon-2">🎊</div>
+    <div class="bg-icon icon-3">🎊</div>
+    <div class="bg-icon icon-4">💖</div>
+    <div class="bg-icon icon-5">🎉</div>
+    <div class="bg-icon icon-6">🎊</div>
+    <div class="bg-icon icon-7">🎈</div>
+    <div class="bg-icon icon-8">🎉</div>
 
-    <div class="app-container">
-        <div class="header-title">لولو</div>
-        <div class="header-subtitle">انت ستهدي</div>
-
-        <div class="target-name-box">
-            <h1>فارس</h1>
-        </div>
-
-        <div class="wishlist-box">
-            <h3>أمنيات فارس للهدايا: 🎁</h3>
-            <p>(لم يكتب أمنياته بعد)</p>
-        </div>
-
-        <div class="selection-section">
-            <h3>أكتب الهدايا التي ترغب بها: 💌</h3>
-            
-            <div class="gifts-grid">
-                <div class="gift-item" onclick="toggleSelection(this)">
-                    <span class="gift-icon">💄</span>
-                    <span class="gift-name">ميكب</span>
-                </div>
-                <div class="gift-item selected" onclick="toggleSelection(this)">
-                    <span class="gift-icon">💰</span>
-                    <span class="gift-name">روبلوكس</span>
-                </div>
-                <div class="gift-item" onclick="toggleSelection(this)">
-                    <span class="gift-icon">🎧</span>
-                    <span class="gift-name">سماعه طبيه</span>
-                </div>
-                <div class="gift-item" onclick="toggleSelection(this)">
-                    <span class="gift-icon">❤️‍🔥</span>
-                    <span class="gift-name">عطور</span>
-                </div>
-                <div class="gift-item" onclick="toggleSelection(this)">
-                    <span class="gift-icon">🧰</span>
-                    <span class="gift-name">بسطار</span>
-                </div>
-            </div>
-
-            <div class="hint-text">(اضغط على المربعات أو اكتب هديتك بنفسك)</div>
-            
-            <textarea class="custom-gift-input" placeholder="اكتب هنا..."></textarea>
-        </div>
+    <div class="modal-card">
+        <p class="hadith-text">كما أوصانا النبي ﷺ (تهادوا تحابوا)</p>
+        
+        <p class="description-text">
+            ولتجديد ذكرى الفعالية ولإشباع فضولك حيال من ستهدي
+            <strong>ضع سنة ميلادك بالهجري</strong>
+        </p>
+        
+        <input type="text" class="year-input" placeholder="ادخل سنة الميلاد">
+        
+        <button class="login-btn">دخول</button>
     </div>
 
-    <script>
-        // 1. وظيفة تحديد/إلغاء تحديد الهدايا
-        function toggleSelection(element) {
-            element.classList.toggle('selected');
-        }
-
-        // 2. نظام المربعات المتساقطة (مُحسن وخفيف جداً)
-        function createConfetti() {
-            const container = document.getElementById('confetti-container');
-            const colors = ['#3498db', '#e74c3c', '#9b59b6', '#2ecc71', '#f1c40f', '#e67e22'];
-            
-            // إنشاء 30 مربع فقط (عدد قليل لا يسبب تعليق)
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.classList.add('confetti');
-                    
-                    // خصائص عشوائية للمربع
-                    confetti.style.left = Math.random() * 100 + 'vw';
-                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.style.animationDuration = (Math.random() * 3 + 2) + 's'; // سرعة السقوط بين 2 لـ 5 ثواني
-                    
-                    container.appendChild(confetti);
-
-                    // حذف المربع بعد انتهاء سقوطه لتنظيف الذاكرة ومنع التعليق
-                    setTimeout(() => {
-                        confetti.remove();
-                    }, 5000); 
-
-                }, i * 150); // تأخير بسيط بين ظهور كل مربع والآخر
-            }
-        }
-
-        // تشغيل تأثير المربعات عند فتح الصفحة
-        window.onload = createConfetti;
-    </script>
 </body>
 </html>
