@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عائلة لولو - فعالية الهدايا</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<style>
+body { margin:0; font-family:'Cairo', sans-serif; background: linear-gradient(135deg, #ffc0cb, #ffb6c1, #ff69b4); text-align:center; overflow-x:hidden; min-height: 100vh; }
+.page { height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column; position:relative; overflow:hidden; }
+.box { background:rgba(255,255,255,0.85); backdrop-filter:blur(15px); padding:30px; border-radius:25px; width:85%; max-width:400px; box-shadow:0 10px 25px rgba(0,0,0,0.3); transition:0.3s all ease; z-index: 10; position: absolute; }
+button { margin-top:20px; padding:10px 20px; border:none; border-radius:10px; background:#ff69b4; color:white; font-size:16px; cursor:pointer; font-family: 'Cairo', sans-serif; font-weight: bold; transition:0.3s; }
+button:hover { transform:scale(1.05); background:#ff1493;}
+input, textarea { margin-top:15px; padding:10px; border-radius:8px; border:1px solid pink; width:80%; text-align:center; font-size:16px; font-family: 'Cairo', sans-serif;}
+.confetti-piece { position:absolute; width:10px; height:10px; z-index: 999; }
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+.admin-table th, .admin-table td { border: 1px solid #ff69b4; padding: 8px; text-align: center; }
+.admin-table th { background-color: #ffb6c1; }
+.loading { display: none; font-weight: bold; color: #d63384; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<div id="page1" class="page">
+  <div id="welcomeBox" class="box">
+    <h2>❤️ كل عام وأنتم بخير ❤️</h2>
+    <p>مرحباً بكم في فعالية عائلة لولو</p>
+    <button onclick="goNext()">الدخول للفعالية</button>
+  </div>
+</div>
+
+<div id="page2" class="page" style="display:none">
+  <div class="box">
+    <p>الآن يمكنك الدخول من جهازك الخاص!</p>
+    <input id="codeInput" type="password" placeholder="أدخل الرمز السري">
+    <br>
+    <button onclick="checkCode()">دخول</button>
+    <p id="loadingMsg" class="loading">جاري الاتصال بقاعدة البيانات... ⏳</p>
+    <p id="msg" style="font-weight:bold;"></p>
+  </div>
+</div>
+
+<div id="page3" class="page" style="display:none">
+  <div class="box" style="position: relative; max-height: 90vh; overflow-y: auto;">
+    <h3 style="font-size:20px;">أهلاً بك يا <span id="giver" style="color:#d63384; font-size:24px;"></span></h3>
+    <p style="margin-bottom:10px;">القرعة اختارت لك أن تهدي إلى:</p>
+    <h2 id="receiver" style="font-size:32px; color:#ff1493; background:rgba(255,182,193,0.5); padding:10px; border-radius:10px;"></h2>
+
+    <div style="background:#fff; padding:10px; border-radius:10px; margin-bottom:15px; border: 1px dashed #ff69b4;">
+      <p style="margin:0; font-weight:bold; font-size:14px;">🎁 أمنيات <span id="receiverNameHint"></span> للهدايا:</p>
+      <p id="receiverWishes" style="color:#555; font-size:14px; margin-top:5px;">(لم يكتب أمنياته بعد)</p>
+    </div>
+
+    <div style="background:rgba(255,182,193,0.3); padding:15px; border-radius:15px; margin-bottom:15px;">
+      <p style="margin:0; font-size:14px;">✍️ اكتب أمنياتك ليراها من سيهديك:</p>
+      <textarea id="myWishes" placeholder="اكتب هداياك المفضلة هنا (مثال: عطر، بطاقة روبلوكس...)" rows="2"></textarea>
+      <br>
+      <button onclick="saveWishes()" style="font-size: 14px; padding: 5px 15px;">حفظ أمنياتي 💾</button>
+      <span id="wishSavedMsg" style="color:green; display:none; font-size:12px;">تم الحفظ!</span>
+    </div>
+
+    <button onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div id="pageAdmin" class="page" style="display:none">
+  <div class="box" style="position: relative; max-height: 90vh; overflow-y: auto;">
+    <h2>⚙️ لوحة الإشراف السحابية</h2>
+    <p style="font-size:14px;">يتم حفظ القرعة الآن في قاعدة البيانات ليراها الجميع.</p>
+    
+    <button onclick="generateNewDraw()" style="background:#28a745;">🎲 توليد وحفظ قرعة جديدة</button>
+    <button onclick="clearHistory()" style="background:#dc3545; font-size: 12px;">⚠️ تصفير النظام</button>
+    
+    <h3 style="margin-top:20px; font-size:16px;">القرعة الحالية:</h3>
+    <table class="admin-table" id="currentDrawTable">
+      <thead><tr><th>المهدي</th><th>المستلم</th></tr></thead>
+      <tbody id="drawTbody"></tbody>
+    </table>
+
+    <h3 style="margin-top:20px; font-size:16px;">🎁 قائمة أمنيات الجميع:</h3>
+    <table class="admin-table" id="adminWishesTable">
+      <thead><tr><th>الاسم</th><th>الأمنية المكتوبة</th></tr></thead>
+      <tbody id="adminWishesTbody"></tbody>
+    </table>
+
+    <button onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div id="confettiContainer"></div>
+
+<script>
+// --- 1. إعدادات المستخدمين ---
+const users = {
+  "2004":"شهد", "2008":"علياء", "2007":"راكان", "2011":"فارس",
+  "1989":"احمد", "1995":"محمد", "1991":"فيصل", "1993":"رايد",
+  "1997":"نجد", "2001":"غاده", "1999":"ساره", "1425":"لولو"
+};
+const adminCode = "0000";
+let currentUser = "";
+let currentReceiver = "";
+
+// --- 2. إعدادات Firebase الخاصة بك ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAB23TEA8IzB2eTp93pM82DhryovXxZWRc",
+  authDomain: "lulu-famly.firebaseapp.com",
+  projectId: "lulu-famly",
+  storageBucket: "lulu-famly.firebasestorage.app",
+  messagingSenderId: "651578348048",
+  appId: "1:651578348048:web:07801feb7a74527d433095",
+  measurementId: "G-L6J6XLMCG0"
+};
+
+// تهيئة قاعدة البيانات
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// مراجع قاعدة البيانات
+const drawDoc = db.collection("lulu_family").doc("current_draw");
+const wishesDoc = db.collection("lulu_family").doc("wishes");
+
+// --- التنقل ---
+function goNext() {
+  document.getElementById("page1").style.display = "none";
+  document.getElementById("page2").style.display = "flex";
+}
+
+function logout() {
+  document.getElementById("page3").style.display = "none";
+  document.getElementById("pageAdmin").style.display = "none";
+  document.getElementById("page2").style.display = "flex";
+  document.getElementById("codeInput").value = "";
+  document.getElementById("msg").innerText = "";
+  document.getElementById("confettiContainer").innerHTML = ""; 
+  currentUser = "";
+}
+
+// --- فحص الدخول وقراءة البيانات السحابية ---
+async function checkCode() {
+  const input = document.getElementById("codeInput").value;
+  const msg = document.getElementById("msg");
+  const loading = document.getElementById("loadingMsg");
+  
+  msg.innerText = "";
+  
+  if(input === adminCode) {
+    loading.style.display = "block";
+    
+    // جلب القرعة والأمنيات للمشرف
+    const docSnap = await drawDoc.get();
+    const wishesSnap = await wishesDoc.get();
+    
+    loading.style.display = "none";
+    
+    document.getElementById("page2").style.display = "none";
+    document.getElementById("pageAdmin").style.display = "flex";
+    
+    // رسم الجداول
+    renderAdminTable(docSnap.exists ? docSnap.data().draw : {});
+    renderAdminWishes(wishesSnap.exists ? wishesSnap.data() : {});
+    return;
+  }
+
+  const person = users[input];
+  if(person) {
+    loading.style.display = "block";
+    try {
+      const docSnap = await drawDoc.get();
+      loading.style.display = "none";
+
+      if(!docSnap.exists || !docSnap.data().draw || Object.keys(docSnap.data().draw).length === 0) {
+        msg.innerText = "المشرف لم يقم بإنشاء قرعة حتى الآن!";
+        msg.style.color = "red";
+        return;
+      }
+
+      currentUser = person;
+      currentReceiver = docSnap.data().draw[person];
+      
+      document.getElementById("page2").style.display = "none";
+      document.getElementById("page3").style.display = "flex";
+      
+      document.getElementById("giver").innerText = currentUser;
+      document.getElementById("receiver").innerText = currentReceiver;
+      document.getElementById("receiverNameHint").innerText = currentReceiver;
+
+      // جلب الأمنيات
+      loadWishes();
+      createConfetti();
+      
+    } catch(e) {
+      loading.style.display = "none";
+      msg.innerText = "تأكد من إعدادات القواعد (Security Rules) في فايربيس.";
+      msg.style.color = "red";
+      console.error(e);
+    }
+  } else {
+    msg.innerText = "الرمز غير صحيح ❌";
+    msg.style.color = "red";
+  }
+}
+
+// --- حفظ وقراءة الأمنيات للمستخدم العادي ---
+async function loadWishes() {
+  const wishesSnap = await wishesDoc.get();
+  if(wishesSnap.exists) {
+    const data = wishesSnap.data();
+    document.getElementById("receiverWishes").innerText = data[currentReceiver] || "(لم يكتب أمنياته بعد)";
+    document.getElementById("myWishes").value = data[currentUser] || "";
+  }
+}
+
+async function saveWishes() {
+  const myWishText = document.getElementById("myWishes").value;
+  await wishesDoc.set({ [currentUser]: myWishText }, { merge: true });
+  
+  const savedMsg = document.getElementById("wishSavedMsg");
+  savedMsg.style.display = "inline-block";
+  setTimeout(() => savedMsg.style.display = "none", 3000);
+}
+
+// --- لوحة الإشراف والدوال الخاصة بها ---
+async function generateNewDraw() {
+  const names = Object.values(users);
+  let validDraw = false;
+  let newDraw = {};
+  
+  const docSnap = await drawDoc.get();
+  let history = docSnap.exists ? (docSnap.data().history || []) : [];
+
+  let attempts = 0;
+  while (!validDraw && attempts < 2000) {
+    let receivers = [...names].sort(() => Math.random() - 0.5);
+    validDraw = true;
+    newDraw = {};
+
+    for (let i = 0; i < names.length; i++) {
+      let giver = names[i];
+      let receiver = receivers[i];
+      if (giver === receiver) { validDraw = false; break; }
+      let inHistory = history.some(pastDraw => pastDraw[giver] === receiver);
+      if (inHistory) { validDraw = false; break; }
+      newDraw[giver] = receiver;
+    }
+    attempts++;
+  }
+
+  if(validDraw) {
+    if(docSnap.exists && docSnap.data().draw) {
+      history.push(docSnap.data().draw);
+      if(history.length > 2) history.shift();
+    }
+    
+    await drawDoc.set({ draw: newDraw, history: history });
+    alert("✅ تم رفع القرعة إلى السيرفر بنجاح!");
+    renderAdminTable(newDraw);
+  } else {
+    alert("❌ فشل النظام في إيجاد تركيبة بدون تكرار! الرجاء تصفير النظام.");
+  }
+}
+
+function renderAdminTable(drawData) {
+  const tbody = document.getElementById("drawTbody");
+  tbody.innerHTML = "";
+  if(drawData && Object.keys(drawData).length > 0) {
+    for(let giver in drawData) {
+      tbody.innerHTML += `<tr><td>${giver}</td><td>${drawData[giver]}</td></tr>`;
+    }
+  } else {
+    tbody.innerHTML = "<tr><td colspan='2'>لا توجد قرعة نشطة</td></tr>";
+  }
+}
+
+// دالة جديدة لرسم جدول الأمنيات في لوحة الإشراف
+function renderAdminWishes(wishesData) {
+  const tbody = document.getElementById("adminWishesTbody");
+  tbody.innerHTML = "";
+  if(wishesData && Object.keys(wishesData).length > 0) {
+    for(let person in wishesData) {
+      tbody.innerHTML += `<tr><td>${person}</td><td>${wishesData[person]}</td></tr>`;
+    }
+  } else {
+    tbody.innerHTML = "<tr><td colspan='2'>لم يقم أحد بكتابة أمنياته بعد</td></tr>";
+  }
+}
+
+async function clearHistory() {
+  if(confirm("هل أنت متأكد من مسح السجل والقرعات؟")) {
+    await drawDoc.set({ draw: {}, history: [] });
+    await wishesDoc.set({});
+    renderAdminTable({});
+    renderAdminWishes({});
+    alert("تم تصفير النظام وقاعدة البيانات.");
+  }
+}
+
+// --- مؤثرات الكونفيتي ---
+function createConfetti() {
+  const container = document.getElementById("confettiContainer");
+  container.innerHTML = "";
+  for(let i=0; i<50; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti-piece";
+    c.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
+    c.style.left = Math.random() * window.innerWidth + "px";
+    c.style.top = "-10px";
+    container.appendChild(c);
+    let speed = 2 + Math.random() * 3;
+    (function animateConfetti(el, s) {
+      let top = 0;
+      function frame() {
+        top += s;
+        el.style.top = top + "px";
+        if(top < window.innerHeight) requestAnimationFrame(frame);
+        else el.remove();
+      }
+      frame();
+    })(c, speed);
+  }
+}
+</script>
+</body>
+</html>
