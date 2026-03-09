@@ -132,15 +132,14 @@ const adminCode = "0000";
 let currentUser = "";
 let currentReceiver = "";
 
-// --- 2. إعدادات Firebase الجديدة ---
+// --- 2. إعدادات Firebase الجديدة والنهائية ---
 const firebaseConfig = {
-  apiKey: "AIzaSyAB23TEA8IzB2eTp93pM82DhryovXxZWRc",
-  authDomain: "lulu-famly.firebaseapp.com",
-  projectId: "lulu-famly",
-  storageBucket: "lulu-famly.firebasestorage.app",
-  messagingSenderId: "651578348048",
-  appId: "1:651578348048:web:c0cc602e6972516e433095",
-  measurementId: "G-XME0QQC7Y9"
+  apiKey: "AIzaSyCgehBQ_Gr-sV3R_M0Tu3am5MBl7R-rsrQ",
+  authDomain: "lulu-family-3b454.firebaseapp.com",
+  projectId: "lulu-family-3b454",
+  storageBucket: "lulu-family-3b454.firebasestorage.app",
+  messagingSenderId: "70161323618",
+  appId: "1:70161323618:web:bcf7a7d902c73bed9be33b"
 };
 
 // تهيئة قاعدة البيانات
@@ -189,7 +188,7 @@ async function checkCode() {
       renderAdminWishes(wishesSnap.exists ? wishesSnap.data() : {});
     } catch (error) {
       loading.style.display = "none";
-      msg.innerText = "فشل الاتصال! تأكد من تعديل الـ Rules في فايربيس إلى true.";
+      msg.innerText = "فشل الاتصال! تأكد من إنشاء القاعدة (default) وتعديل Rules إلى true.";
       msg.style.color = "red";
     }
     return;
@@ -223,7 +222,7 @@ async function checkCode() {
       
     } catch(e) {
       loading.style.display = "none";
-      msg.innerText = "فشل الاتصال! تأكد من تعديل الـ Rules في فايربيس إلى true.";
+      msg.innerText = "فشل الاتصال! تأكد من إنشاء القاعدة (default) وتعديل Rules إلى true.";
       msg.style.color = "red";
       console.error(e);
     }
