@@ -1,67 +1,206 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>قلب فهدة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>نظام التهادي العائلي 🎁</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#ffffff">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        /* إعدادات الشاشة والخلفية */
-        body {
-            background-color: black;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root { 
+            --bg: #f8fafc; 
+            --glass: rgba(255, 255, 255, 0.9); 
+            --border: rgba(226, 232, 240, 0.8); 
+            --accent: #10b981; 
+            --accent-sec: #38bdf8; 
+            --text-main: #1e293b; 
+            --text-sub: #64748b; 
         }
-        canvas {
-            background-color: black;
-        }
+        html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+        body { display: flex; flex-direction: column; align-items: center; padding: max(2rem, env(safe-area-inset-top)) 1rem max(1.5rem, env(safe-area-inset-bottom)); min-height: 100dvh; position: relative; }
+        .lbg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; background: var(--accent); }
+        .b1 { width: 400px; height: 400px; top: -5%; right: -5%; animation: float 18s infinite alternate; }
+        .b2 { width: 300px; height: 300px; bottom: -5%; left: -5%; background: var(--accent-sec); animation: float 14s infinite alternate-reverse; }
+        @keyframes float { to { transform: translate(25px, 25px); } }
+        .wrap { width: 100%; max-width: 22rem; z-index: 10; display: flex; flex-direction: column; gap: 1rem; flex: 1; justify-content: center; }
+        .card { background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 1.8rem; padding: 1.5rem; box-shadow: 0 15px 35px -8px rgba(100, 116, 139, 0.1); position: relative; }
+        .inner { background: rgba(255, 255, 255, 0.4); border: 1px solid var(--border); border-radius: 1.2rem; padding: 1rem; box-shadow: inset 0 2px 6px rgba(100, 116, 139, 0.05); }
+        .ai-btn { background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(56, 189, 248, 0.1)); border: 1px solid rgba(16, 185, 129, 0.2); color: #059669; }
+        .btn { background: linear-gradient(135deg, #10b981, #38bdf8); color: white; border: none; border-radius: 1rem; padding: 1rem; font-weight: 700; font-size: 1rem; cursor: pointer; width: 100%; transition: 0.3s; display: flex; flex-direction: column; align-items: center; box-shadow: 0 5px 15px -3px rgba(16, 185, 129, 0.3); }
+        .inp { width: 100%; background: rgba(255, 255, 255, 0.6); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; color: var(--text-main); text-align: center; font-size: 1.05rem; outline: none; transition: 0.3s; }
+        .chip { background: rgba(255, 255, 255, 0.6); border: 1px solid var(--border); border-radius: 0.9rem; padding: 0.7rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-align: center; color: var(--text-main); }
+        .chip.on { background: var(--accent); color: white; border-color: var(--accent); }
+        .cap { font-size: 9px; font-weight: 700; letter-spacing: 1.8px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 0.4rem; }
+        .hide { display: none !important; }
+        .fi { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .spin { width: 18px; height: 18px; border: 2px solid rgba(16, 185, 129, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: sp 0.8s linear infinite; }
+        @keyframes sp { to { transform: rotate(360deg); } }
+        .admin-scroll { max-height: 28vh; overflow-y: auto; }
+        .admin-row { background: rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 1rem; border: 1px solid var(--border); margin-bottom: 7px; }
     </style>
 </head>
 <body>
+<div class="lbg"><div class="blob b1"></div><div class="blob b2"></div></div>
 
-    <canvas id="heartCanvas" width="800" height="800"></canvas>
+<div id="s-login" class="wrap fi">
+    <div class="text-center mb-6">
+        <div class="text-5xl mb-3">🎁</div>
+        <h1 class="text-2xl font-black text-slate-900">نظام التهادي العائلي</h1>
+        <p class="cap text-green-700">القرعة الإلكترونية المضمونة • ٢٠٢٦</p>
+    </div>
+    <div class="card">
+        <p class="cap text-center">بوابة الدخول</p>
+        <input type="password" id="inp-code" class="inp mb-4" placeholder="تاريخ ميلادك بالهجري">
+        <button class="btn" onclick="login()" id="btn-login"><span id="txt-login">دخول النظام ←</span></button>
+    </div>
+</div>
 
-    <script>
-        const canvas = document.getElementById('heartCanvas');
-        const ctx = canvas.getContext('2d');
+<div id="s-member" class="wrap hide fi">
+    <div class="card text-center">
+        <h2 id="el-welcome" class="text-lg font-bold mb-5 text-slate-800"></h2>
+        <div id="zone-result" class="hide">
+            <div class="inner mb-5">
+                <p class="cap">🎯 الشخص الذي ستقوم بإهدائه</p>
+                <div id="el-target" class="text-4xl font-black text-emerald-600 mb-5"></div>
+                <button onclick="askAI()" id="btn-ai" class="ai-btn w-full py-2.5 rounded-xl text-[12px] font-semibold mb-3 flex items-center justify-center gap-2"><span>استشاره ذكيه ✨</span></button>
+                <div id="ai-response" class="hide mb-3 p-3.5 rounded-xl text-right text-[10px] bg-emerald-50"><div id="ai-text" class="text-emerald-950"></div></div>
+                <div id="row-budget" class="hide flex justify-center gap-2 mb-3"><span class="text-[11px] font-semibold text-slate-500">💰 الميزانية المقترحة:</span><span id="el-budget" class="font-bold text-emerald-700"></span></div>
+                <button onclick="toggleWishes()" class="w-full py-1.5 border border-slate-100 rounded-lg text-[8px] font-semibold text-slate-500">قائمة الرغبات</button>
+                <div id="box-wishes" class="hide flex flex-wrap justify-center gap-1.5 mt-3.5"></div>
+            </div>
+            <button id="btn-deliver" onclick="markDelivered()" class="btn"><span id="ttl-deliver">📦 تأكيد تسليم الهدية</span></button>
+            <div id="msg-delivered" class="hide inner text-green-600 font-bold text-sm">✅ تم تأكيد التسليم بنجاح!</div>
+        </div>
+        <div id="zone-nodraw" class="hide py-8 text-slate-400 font-bold text-sm">القرعة لم تُفعل بعد ⏳</div>
+    </div>
+    <div class="card">
+        <h3 class="font-bold mb-1 text-sm text-slate-800">🌟 رغباتي في الهدية</h3>
+        <div id="grid-wishes" class="grid grid-cols-2 gap-1.5 mb-3"></div>
+        <input type="text" id="inp-custom" class="inp text-xs py-2.5 mb-3" placeholder="أمنية خاصة...">
+        <button class="btn py-2.5 text-xs" onclick="saveWishes()"><span id="txt-save">💾 تحديث رغباتي</span></button>
+    </div>
+    <button onclick="logout()" class="text-[9px] font-semibold text-slate-400 py-3">← خروج من الحساب</button>
+</div>
 
-        // نقل نقطة الصفر (المركز) إلى منتصف الشاشة
-        ctx.translate(400, 400);
+<div id="s-admin" class="wrap hide fi">
+    <div class="card text-center">
+        <div class="text-4xl mb-2">👑</div><h2 class="text-xl font-black mb-5 text-slate-900">غرفة التحكم والقرعة</h2>
+        <div class="inner text-right mb-5">
+            <p class="cap mb-3.5">👥 إدارة الأعضاء والبيانات</p>
+            <div id="admin-user-editor" class="admin-scroll"><div class="text-center text-xs opacity-50">جاري التحميل...</div></div>
+        </div>
+        <div class="text-right mb-5"><label class="cap block text-slate-500">💰 الميزانية المقترحة</label><input type="text" id="inp-budget" class="inp text-sm py-2.5" placeholder="مثال: 500 ريال"></div>
+        <button class="btn text-base py-3" onclick="runDraw()" id="btn-draw"><span id="txt-draw">🎲 ابدأ القرعة المضمونة</span></button>
+    </div>
+    <button onclick="logout()" class="text-[9px] font-semibold text-slate-400 py-3 mx-auto">← خروج المشرف</button>
+</div>
 
-        // معادلات رسم القلب
-        function heartX(t) {
-            return 16 * Math.pow(Math.sin(t), 3);
-        }
+<script>
+// --- التحديث لربط قاعدة البيانات الجديدة ---
+const SURL = 'https://psqogxndgghuozidreid.supabase.co'; // تم التحديث بناءً على المفتاح الجديد
+const SKEY = 'sb_publishable_9whhd1B80pFNABoLinRtOA_pfcwij4G'; // المفتاح الجديد الخاص بك
+const db = supabase.createClient(SURL, SKEY);
+const STORE = 'rajeh_v29_new_db';
 
-        function heartY(t) {
-            // نضرب في سالب لأن محور الصادات (Y) في المتصفح مقلوب
-            return -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-        }
+let me = null, assignId = null, rxWishes = [], rxUser = null;
+const $ = id => document.getElementById(id);
 
-        // إعدادات الرسم
-        ctx.strokeStyle = 'pink'; // لون الخط
-        ctx.lineWidth = 0.5;      // سماكة الخط
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
+window.onload = () => { const s = localStorage.getItem(STORE); if(s) { $("inp-code").value = s; login(true); } };
 
-        // حلقة الرسم لإنشاء الخطوط المتداخلة
-        for (let i = 0; i < 2500; i++) {
-            let x = heartX(i) * 20;
-            let y = heartY(i) * 20;
-            ctx.lineTo(x, y);
-        }
-        ctx.stroke(); // تنفيذ الرسم
+async function login(auto = false) {
+    const code = $("inp-code").value.trim(); if(!code) return;
+    $("txt-login").innerHTML = '<div class="spin mx-auto"></div>';
+    const { data: u, error } = await db.from('users').select('*').eq('code', code).single();
+    if(error || !u) { if(!auto) alert("الرمز غير صحيح!"); $("txt-login").innerText = "دخول النظام ←"; return; }
+    localStorage.setItem(STORE, code); me = u; u.role === 'admin' ? loadAdmin() : loadMember(u);
+}
 
-        // كتابة الاسم "فهدة" في المنتصف
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 40px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        // رفع النص قليلاً ليكون متمركزاً داخل القلب
-        ctx.fillText('', 0, -20); 
-    </script>
+function logout() { if(confirm("هل تريد الخروج؟")) { localStorage.removeItem(STORE); location.reload(); } }
 
+async function loadMember(u) {
+    $("s-login").classList.add('hide'); $("s-member").classList.remove('hide');
+    $("el-welcome").innerText = "أهلاً بك، " + u.name;
+    buildWishesGrid(u.wishes || '');
+    const { data: draw } = await db.from('draws').select('*').order('created_at', {ascending: false}).limit(1).maybeSingle();
+    if(!draw) { $("zone-nodraw").classList.remove('hide'); return; }
+    if(draw.budget) { $("el-budget").innerText = draw.budget; $("row-budget").classList.remove('hide'); }
+    const { data: asgn } = await db.from('assignments').select('*, receiver:users!receiver_id(*)').eq('giver_id', u.id).eq('draw_id', draw.id).maybeSingle();
+    if(asgn) {
+        assignId = asgn.id; rxUser = asgn.receiver; $("el-target").innerText = rxUser.name;
+        rxWishes = (rxUser.wishes || '').split(',').filter(Boolean);
+        $("zone-result").classList.remove('hide');
+        asgn.is_delivered ? ($("btn-deliver").classList.add('hide'), $("msg-delivered").classList.remove('hide')) : ($("btn-deliver").classList.remove('hide'));
+    } else $("zone-nodraw").classList.remove('hide');
+}
+
+const W_OPTIONS = ['عطور وعناية', 'ملابس وأناقة', 'إلكترونيات', 'قهوة وحلويات', 'ساعة فخمة', 'كتب وقراءة'];
+function buildWishesGrid(saved) {
+    const arr = (saved || '').split(',');
+    $("grid-wishes").innerHTML = W_OPTIONS.map(opt => `<button onclick="this.classList.toggle('on')" class="chip ${arr.includes(opt)?'on':''}">${opt}</button>`).join('');
+}
+
+async function saveWishes() {
+    const sel = [...document.querySelectorAll('.chip.on')].map(c => c.innerText.trim());
+    const custom = $("inp-custom").value.trim(); if(custom) sel.push(custom);
+    await db.from('users').update({ wishes: sel.join(',') }).eq('id', me.id);
+    alert("تم التحديث بنجاح! ✅");
+}
+
+function toggleWishes() {
+    const box = $("box-wishes"); box.classList.toggle('hide');
+    box.innerHTML = rxWishes.length ? rxWishes.map(w => `<span class="chip py-0.5 px-2 text-[8px] font-bold text-emerald-800 bg-emerald-100">${w}</span>`).join('') : '<p class="text-[9px] text-slate-400 italic">لم يحدد رغباته بعد</p>';
+}
+
+function askAI() {
+    const aiText = $("ai-text"); $("ai-response").classList.remove('hide');
+    const age = 1447 - (parseInt(rxUser.code.substring(0,4)) || 1400);
+    const gender = rxUser.gender || 'غير محدد';
+    let ideas = [];
+    if(rxWishes.includes('إلكترونيات')) ideas.push(age < 25 ? "• سماعة ألعاب محيطية." : "• باور بانك سريع.");
+    if(rxWishes.includes('عطور وعناية')) ideas.push(gender === 'ذكر' ? "• طقم بخور سيوفي." : "• مجموعة عناية فرنسية.");
+    if(ideas.length === 0) ideas.push("• بوكس شوكولاتة فاخرة أو باقة ورد.");
+    aiText.innerHTML = `<div class="text-emerald-950 font-bold mb-1 text-[10px]">استشارة ذكية لـ ${rxUser.name}:</div><div class="text-slate-600">${ideas.join('<br>')}</div>`;
+}
+
+async function loadAdmin() {
+    $("s-login").classList.add('hide'); $("s-admin").classList.remove('hide');
+    const { data: allUsers } = await db.from('users').select('*').order('name');
+    $("admin-user-editor").innerHTML = allUsers.map(u => `
+        <div class="admin-row flex gap-2 items-center">
+            <input id="n-${u.id}" class="bg-white/50 text-[10px] w-1/3 p-1 rounded" value="${u.name}">
+            <input id="c-${u.id}" class="bg-white/50 text-[10px] w-1/3 p-1 rounded text-center" value="${u.code}">
+            <select id="g-${u.id}" class="bg-white/50 text-[9px] p-1 rounded"><option value="ذكر" ${u.gender==='ذكر'?'selected':''}>ذكر</option><option value="أنثى" ${u.gender==='أنثى'?'selected':''}>أنثى</option></select>
+            <button onclick="updateUser('${u.id}')" class="bg-emerald-600 text-white text-[9px] px-2 py-1 rounded">حفظ</button>
+        </div>
+    `).join('');
+}
+
+async function updateUser(id) {
+    const n = $(`n-${id}`).value.trim(); const c = $(`c-${id}`).value.trim(); const g = $(`g-${id}`).value;
+    await db.from('users').update({ name: n, code: c, gender: g }).eq('id', id);
+    alert("تم الحفظ! 🪄");
+}
+
+async function runDraw() {
+    if(!confirm("بدء قرعة جديدة؟")) return;
+    $("txt-draw").innerHTML = '<div class="spin mx-auto"></div>';
+    const { data: users } = await db.from('users').select('*').eq('role', 'member');
+    if (!users || users.length < 2) { alert("يجب وجود شخصين على الأقل!"); location.reload(); return; }
+    const { data: d } = await db.from('draws').insert({ month_name: 'سحب جديد', budget: $("inp-budget").value }).select().single();
+    let shuffled = [...users].sort(() => Math.random() - 0.5);
+    let finalAssignments = shuffled.map((u, i) => ({ draw_id: d.id, giver_id: shuffled[i].id, receiver_id: shuffled[(i + 1) % shuffled.length].id }));
+    await db.from('assignments').insert(finalAssignments);
+    alert("تمت القرعة بنجاح! 🎉"); location.reload();
+}
+
+async function markDelivered() { if(!confirm("تأكيد التسليم؟")) return; await db.from('assignments').update({ is_delivered: true }).eq('id', assignId); location.reload(); }
+</script>
 </body>
 </html>
