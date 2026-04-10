@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>نظام التهادي الذكي 🎁</title>
+    <title>نظام التهادي الرقمي 🎁</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
         .card { background: white; border-radius: 2rem; padding: 2rem; width: 100%; max-width: 22rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .btn { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border-radius: 1rem; padding: 1rem; width: 100%; font-weight: 700; cursor: pointer; border: none; }
+        .btn { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border-radius: 1rem; padding: 1rem; width: 100%; font-weight: 700; cursor: pointer; border: none; transition: 0.3s; }
+        .btn:active { transform: scale(0.98); }
         .inp { width: 100%; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; text-align: center; font-size: 1.2rem; margin-bottom: 1rem; outline: none; }
         .hide { display: none !important; }
-        .status-ok { color: #10b981; font-size: 10px; font-weight: bold; margin-top: 5px; }
+        .spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: sp 0.8s linear infinite; display: inline-block; }
+        @keyframes sp { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -23,22 +25,18 @@
     <div class="text-center mb-6">
         <div class="text-5xl mb-3">🎁</div>
         <h1 class="text-xl font-black text-slate-800">نظام التهادي الرقمي</h1>
-        <p class="text-[10px] text-slate-500 font-bold">استخدم رقمك الخاص للدخول</p>
+        <p class="text-[10px] text-slate-500 font-bold">أدخل رقمك الخاص (1-6)</p>
     </div>
     <input type="text" id="inp-code" class="inp" placeholder="الرمز السري">
-    <button class="btn" onclick="login()">دخول ←</button>
+    <button class="btn" onclick="login()" id="btn-login">دخول ←</button>
 </div>
 
 <div id="s-admin" class="card hide text-center">
     <h2 class="font-black text-xl mb-6">لوحة التحكم ⚙️</h2>
-    <div class="bg-emerald-50 p-4 rounded-2xl mb-4 border border-emerald-100">
-        <p class="text-[11px] text-emerald-800 leading-relaxed">
-            يا فواز، هذا الزر بيصلح كل شيء أوتوماتيكياً في قاعدة البيانات الجديدة.
-        </p>
-    </div>
-    <button class="btn mb-4" onclick="forceSetup()">🛠️ إصلاح وتهيئة الأرقام (1-6)</button>
-    <button class="btn" onclick="runDraw()">🎲 بدء القرعة</button>
-    <button onclick="location.reload()" class="text-xs mt-6 block w-full text-slate-400">خروج</button>
+    <p class="text-[11px] text-slate-500 mb-4">اضغط زر الإصلاح لزرع الأرقام (1-6) في قاعدة البيانات الجديدة.</p>
+    <button class="btn mb-4" onclick="forceSetup()" id="btn-setup">🛠️ إصلاح وتهيئة الأرقام</button>
+    <button class="btn" onclick="runDraw()" id="btn-draw">🎲 إجراء القرعة الآن</button>
+    <button onclick="location.reload()" class="text-xs mt-6 block w-full text-slate-400 font-bold">تسجيل خروج</button>
 </div>
 
 <div id="s-member" class="card hide text-center">
@@ -48,23 +46,26 @@
             <p class="text-[10px] font-bold text-slate-400 mb-2">أنت ستقوم بإهداء الرقم</p>
             <div id="el-target" class="text-6xl font-black text-emerald-600"></div>
         </div>
-        <button class="btn" onclick="alert('تم تأكيد التسليم!')">📦 تأكيد التسليم</button>
+        <button class="btn" onclick="alert('تم تأكيد التسليم!')">📦 تأكيد تسليم الهدية</button>
     </div>
-    <div id="zone-nodraw" class="py-10 text-slate-400 font-bold">القرعة لم تُجرَ بعد ⏳</div>
-    <button onclick="location.reload()" class="text-xs mt-6 text-slate-400">خروج</button>
+    <div id="zone-nodraw" class="py-10 text-slate-400 font-bold">القرعة لم تبدأ بعد ⏳</div>
+    <button onclick="location.reload()" class="text-xs mt-6 text-slate-400 font-bold">تسجيل خروج</button>
 </div>
 
 <script>
-// --- الربط بالمفتاح القوي (Service Role) لضمان العمل 100% ---
-const SURL = 'https://zfulsalproplkmdndjfa.supabase.co';
-const SKEY = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmdWxzYWxwcm9wbGttZG5kamZhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTgxNDc0MSwiZXhwIjoyMDkxMzkwNzQxfQ.m5N8_6-3llpiGtiRRBFzo_gLyNWvjkMrXx4OeJ_Jxq8';
+// --- الربط بمشروعك الجديد باستخدام المفتاح الموفر ---
+const SURL = 'https://zfulsalproplkmdndjfa.supabase.co'; 
+const SKEY = 'Sb_publishable_VJyss9_y8kEP43sFghmxiQ_CFx-LKRC'; 
 const db = supabase.createClient(SURL, SKEY);
 
 async function login() {
     let code = document.getElementById("inp-code").value.trim().toLowerCase();
     if(!code) return;
+    
+    const btn = document.getElementById("btn-login");
+    btn.innerHTML = '<div class="spin"></div>';
 
-    // دخول إجباري للمشرف (فواز)
+    // دخول إجباري للمشرف
     if (code === 'admin2026') {
         document.getElementById("s-login").classList.add("hide");
         document.getElementById("s-admin").classList.remove("hide");
@@ -73,11 +74,12 @@ async function login() {
 
     const { data: u, error } = await db.from('users').select('*').eq('code', code).maybeSingle();
     
-    if(!u) {
-        alert("الرقم غير مسجل! ادخل كمدير (admin2026) واضغط زر الإصلاح أولاً.");
-        return;
+    if(error || !u) { 
+        alert("الرقم غير مسجل! تأكد من أن المشرف قام بضغط زر 'إصلاح وتهيئة الأرقام'."); 
+        btn.innerText = "دخول ←";
+        return; 
     }
-
+    
     document.getElementById("s-login").classList.add("hide");
     document.getElementById("s-member").classList.remove("hide");
     document.getElementById("el-welcome").innerText = "مرحباً، المستخدم رقم (" + u.name + ")";
@@ -85,20 +87,29 @@ async function login() {
 }
 
 async function forceSetup() {
-    // تصفير وتهيئة الأرقام 1-6 أوتوماتيكياً
+    const btn = document.getElementById("btn-setup");
+    btn.innerHTML = '<div class="spin"></div> جاري التهيئة...';
+    
     const users = [{name:'المشرف', code:'admin2026', role:'admin'}];
     for(let i=1; i<=6; i++) users.push({name:i.toString(), code:i.toString(), role:'member'});
     
     const { error } = await db.from('users').upsert(users);
-    if(error) alert("خطأ في التهيئة: " + error.message);
-    else alert("✅ مبروك يا فواز! تم زرع الأرقام 1-6 بنجاح. الآن يقدر أي شخص يدخل برقمه.");
+    if(error) {
+        alert("حدث خطأ! تأكد من أنك قمت بعمل Run لكود الـ SQL في Supabase أولاً.");
+    } else {
+        alert("✅ تمت تهيئة الأرقام (1-6) بنجاح! يمكنك الآن إجراء القرعة.");
+    }
+    btn.innerText = "🛠️ إصلاح وتهيئة الأرقام";
 }
 
 async function runDraw() {
+    if(!confirm("إجراء قرعة جديدة؟")) return;
+    const btn = document.getElementById("btn-draw");
+    btn.innerHTML = '<div class="spin"></div> جاري السحب...';
+
     const { data: users } = await db.from('users').select('*').eq('role', 'member');
-    if(!users || users.length < 2) return alert("لا يوجد مستخدمين للقرعة!");
+    const { data: d } = await db.from('draws').insert({ month_name: 'سحب جديد' }).select().single();
     
-    const { data: d } = await db.from('draws').insert({month_name:'سحب جديد'}).select().single();
     let sh = [...users].sort(() => Math.random() - 0.5);
     let final = sh.map((u, i) => ({ 
         draw_id: d.id, 
@@ -108,6 +119,7 @@ async function runDraw() {
     
     await db.from('assignments').insert(final);
     alert("🎉 تمت القرعة بنجاح!");
+    location.reload();
 }
 
 async function loadResults(uid) {
