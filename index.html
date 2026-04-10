@@ -3,23 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>نظام التهادي الرقمي 🎁</title>
+    <title>نظام التهادي 🎁</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        :root { --bg: #f8fafc; --accent: #10b981; --text: #1e293b; }
-        html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text); }
-        body { display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
-        .card { background: white; border: 1px solid #e2e8f0; border-radius: 2rem; padding: 2rem; width: 100%; max-width: 22rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative; }
-        .btn { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border-radius: 1rem; padding: 1rem; width: 100%; font-weight: 700; cursor: pointer; border: none; transition: 0.3s; }
-        .btn:active { transform: scale(0.98); }
+        body { background: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; min-height: 100vh; }
+        .card { background: white; border-radius: 2rem; padding: 2rem; width: 100%; max-width: 22rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .btn { background: linear-gradient(135deg, #10b981, #3b82f6); color: white; border-radius: 1rem; padding: 1rem; width: 100%; font-weight: 700; cursor: pointer; border: none; }
         .inp { width: 100%; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; text-align: center; font-size: 1.2rem; margin-bottom: 1rem; outline: none; }
         .hide { display: none !important; }
-        .inner { background: #f1f5f9; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; }
-        .spin { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: sp 0.8s linear infinite; display: inline-block; }
-        @keyframes sp { to { transform: rotate(360deg); } }
+        .spin { width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #10b981; border-radius: 50%; animation: s 1s linear infinite; margin: auto; }
+        @keyframes s { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -27,67 +23,79 @@
 <div id="s-login" class="card">
     <div class="text-center mb-6">
         <div class="text-5xl mb-3">🎁</div>
-        <h1 class="text-xl font-black">نظام التهادي الرقمي</h1>
-        <p class="text-[10px] text-slate-500 font-bold">أدخل رقمك الخاص (1-6)</p>
+        <h1 class="text-xl font-black text-slate-800">نظام التهادي الرقمي</h1>
+        <p class="text-[10px] text-slate-500 font-bold">أدخل رقمك (1-6)</p>
     </div>
     <input type="text" id="inp-code" class="inp" placeholder="الرمز السري">
-    <button class="btn" onclick="login()" id="btn-login">دخول ←</button>
+    <button class="btn" onclick="login()" id="btn-login">دخول الآن ←</button>
+</div>
+
+<div id="s-admin" class="card hide text-center">
+    <h2 class="font-black text-xl mb-6">لوحة التحكم ⚙️</h2>
+    <p class="text-xs text-slate-500 mb-4">أهلاً فواز، اضغط الزر بالأسفل لتهيئة الأرقام إذا كان الموقع يعطي "غير مسجل".</p>
+    <button class="btn mb-4" onclick="forceSetup()">🛠️ زر الإصلاح الشامل (Run SQL)</button>
+    <button class="btn" onclick="runDraw()">🎲 بدء القرعة</button>
+    <button onclick="location.reload()" class="text-xs mt-6 block w-full">خروج</button>
 </div>
 
 <div id="s-member" class="card hide text-center">
     <h2 id="el-welcome" class="text-lg font-bold mb-4"></h2>
     <div id="zone-result" class="hide">
-        <div class="inner">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-2">أنت ستقوم بإهداء الرقم</p>
-            <div id="el-target" class="text-5xl font-black text-emerald-600 mb-4"></div>
+        <div class="bg-slate-50 p-4 rounded-2xl mb-4">
+            <p class="text-[10px] font-bold text-slate-400 mb-2">أنت ستقوم بإهداء الرقم</p>
+            <div id="el-target" class="text-5xl font-black text-emerald-600"></div>
         </div>
-        <button onclick="markDelivered()" id="btn-del" class="btn">📦 تأكيد تسليم الهدية</button>
-        <div id="msg-ok" class="hide font-bold text-green-600 mt-4">✅ تم تسجيل التسليم!</div>
+        <button class="btn">📦 تأكيد التسليم</button>
     </div>
     <div id="zone-nodraw" class="py-10 text-slate-400 font-bold">القرعة لم تبدأ بعد ⏳</div>
-    <button onclick="logout()" class="text-[10px] font-bold text-slate-400 mt-6">تسجيل الخروج</button>
-</div>
-
-<div id="s-admin" class="card hide text-center">
-    <h2 class="font-black text-xl mb-6">لوحة التحكم ⚙️</h2>
-    <div class="inner text-right text-xs">
-        <p class="font-bold mb-2">إحصائيات النظام:</p>
-        <p>• المستخدمين: 6 أرقام</p>
-        <p>• الحالة: متصل بقاعدة البيانات ✅</p>
-    </div>
-    <button class="btn mb-4" onclick="runDraw()" id="btn-draw">🎲 إجراء القرعة الآن</button>
-    <button onclick="logout()" class="text-[10px] font-bold text-slate-400 mt-6">خروج المشرف</button>
+    <button onclick="location.reload()" class="text-xs mt-6">خروج</button>
 </div>
 
 <script>
-// --- إعدادات الربط المباشرة ---
 const SURL = 'https://zfulsalproplkmdndjfa.supabase.co';
 const SKEY = 'EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmdWxzYWxwcm9wbGttZG5kamZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTQ3NDEsImV4cCI6MjA5MTM5MDc0MX0.2B7cGamM0ZWS5g8dKK8gVteolLJzmkQk7UEZncqfIVc';
 const db = supabase.createClient(SURL, SKEY);
 
 async function login() {
-    const code = document.getElementById("inp-code").value.trim();
+    let code = document.getElementById("inp-code").value.trim().toLowerCase(); // يحول أي حرف كبير لصغير تلقائياً
     if(!code) return;
-    
-    const btn = document.getElementById("btn-login");
-    btn.innerHTML = '<div class="spin"></div>';
 
-    const { data: u, error } = await db.from('users').select('*').eq('code', code).maybeSingle();
-    
-    if(error || !u) { 
-        alert("الرمز غير مسجل! تأكد من عمل Run لكود الـ SQL في Supabase."); 
-        btn.innerText = "دخول ←";
-        return; 
-    }
-    
-    document.getElementById("s-login").classList.add("hide");
-    if(u.role === 'admin') {
+    // 🔥 ميزة الدخول الإجباري للمشرف
+    if (code === 'admin2026') {
+        document.getElementById("s-login").classList.add("hide");
         document.getElementById("s-admin").classList.remove("hide");
-    } else {
-        document.getElementById("s-member").classList.remove("hide");
-        document.getElementById("el-welcome").innerText = "مرحباً، مستخدم رقم (" + u.name + ")";
-        loadResults(u.id);
+        return;
     }
+
+    const { data: u } = await db.from('users').select('*').eq('code', code).maybeSingle();
+    if(!u) {
+        alert("الرقم غير مسجل! أدخل كمدير (admin2026) واضغط زر الإصلاح.");
+        return;
+    }
+
+    document.getElementById("s-login").classList.add("hide");
+    document.getElementById("s-member").classList.remove("hide");
+    document.getElementById("el-welcome").innerText = "مرحباً رقم " + u.name;
+    loadResults(u.id);
+}
+
+async function forceSetup() {
+    // هذا الزر يغنيك عن الذهاب لـ Supabase
+    const users = [{name:'المشرف', code:'admin2026', role:'admin'}];
+    for(let i=1; i<=6; i++) users.push({name:i.toString(), code:i.toString(), role:'member'});
+    
+    const { error } = await db.from('users').upsert(users);
+    if(error) alert("خطأ: " + error.message);
+    else alert("تمت التهيئة بنجاح! جرب الدخول الآن بالأرقام 1-6");
+}
+
+async function runDraw() {
+    const { data: users } = await db.from('users').select('*').eq('role', 'member');
+    const { data: d } = await db.from('draws').insert({month_name:'سحب'}).select().single();
+    let sh = [...users].sort(() => Math.random() - 0.5);
+    let final = sh.map((u, i) => ({ draw_id: d.id, giver_id: sh[i].id, receiver_id: sh[(i + 1) % sh.length].id }));
+    await db.from('assignments').insert(final);
+    alert("تمت القرعة!");
 }
 
 async function loadResults(uid) {
@@ -98,37 +106,7 @@ async function loadResults(uid) {
         document.getElementById("zone-nodraw").classList.add("hide");
         document.getElementById("zone-result").classList.remove("hide");
         document.getElementById("el-target").innerText = asgn.receiver.name;
-        if(asgn.is_delivered) { 
-            document.getElementById("btn-del").classList.add("hide"); 
-            document.getElementById("msg-ok").classList.remove("hide"); 
-        }
     }
-}
-
-async function runDraw() {
-    if(!confirm("إجراء قرعة جديدة؟")) return;
-    const btn = document.getElementById("btn-draw");
-    btn.innerHTML = '<div class="spin"></div> جاري السحب...';
-
-    const { data: users } = await db.from('users').select('*').eq('role', 'member');
-    const { data: d } = await db.from('draws').insert({ month_name: 'سحب جديد' }).select().single();
-    
-    let sh = [...users].sort(() => Math.random() - 0.5);
-    let final = sh.map((u, i) => ({ 
-        draw_id: d.id, 
-        giver_id: sh[i].id, 
-        receiver_id: sh[(i + 1) % sh.length].id 
-    }));
-    
-    await db.from('assignments').insert(final);
-    alert("تمت القرعة بنجاح! 🎉");
-    location.reload();
-}
-
-function logout() { location.reload(); }
-async function markDelivered() { 
-    alert("تم تأكيد التسليم بنجاح! ✅"); 
-    location.reload(); 
 }
 </script>
 </body>
