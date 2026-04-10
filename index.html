@@ -42,7 +42,6 @@
       <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm">خروج</button>
     </div>
 
-    <!-- Run Draw -->
     <div class="bg-green-50 rounded-xl p-5 mb-5">
       <h3 class="font-bold text-green-700 mb-2">🎲 إجراء القرعة</h3>
       <p class="text-sm text-gray-500 mb-4">خوارزمية Safe Shift تضمن عدم إهداء أي شخص لنفسه</p>
@@ -53,7 +52,6 @@
       <p id="drawMsg" class="mt-3 text-sm font-medium"></p>
     </div>
 
-    <!-- Assignments Table -->
     <div id="assignmentsAdmin" class="hidden">
       <h3 class="font-bold text-green-700 mb-3">📋 نتائج القرعة الحالية</h3>
       <div id="assignTable" class="space-y-2"></div>
@@ -69,7 +67,6 @@
       <button onclick="logout()" class="text-gray-400 hover:text-red-500 text-sm">خروج</button>
     </div>
 
-    <!-- Assignment -->
     <div id="assignmentBox" class="bg-green-50 rounded-xl p-5 mb-5 text-center hidden">
       <p class="text-gray-500 mb-1">ستهدي هذه المرة</p>
       <div id="receiverDisplay" class="text-4xl font-black text-green-700 my-3"></div>
@@ -84,7 +81,6 @@
       ⏳ لم تُجرَ القرعة بعد، انتظر المشرف.
     </div>
 
-    <!-- Gift Suggestions -->
     <div class="bg-amber-50 rounded-xl p-5">
       <h3 class="font-bold text-amber-700 mb-3">💡 استشارة هدايا ذكية</h3>
       <div class="flex gap-2 mb-3">
@@ -107,7 +103,7 @@
 <script>
 // ===================== SUPABASE INIT =====================
 const SUPA_URL = 'https://zfulsalproplkmdndjfa.supabase.co';
-const SUPA_KEY = 'Sb_publishable_VJyss9_y8kEP43sFghmxiQ_CFx-LKRC';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmdWxzYWxwcm9wbGttZG5kamZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTQ3NDEsImV4cCI6MjA5MTM5MDc0MX0.2B7cGamM0ZWS5g8dKK8gVteolLJzmkQk7UEZncqfIVc';
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_KEY);
 
@@ -117,14 +113,12 @@ let currentAssignment = null;
 // ===================== LOGIN =====================
 async function login() {
   const raw = document.getElementById('codeInput').value.trim();
-  const code = raw.toLowerCase(); // case-insensitive
-  if (!code) return;
+  if (!raw) return;
 
-  // fetch user - compare lowercased
   const { data, error } = await db
     .from('users')
     .select('*')
-    .ilike('code', code)
+    .ilike('code', raw)
     .single();
 
   if (error || !data) {
@@ -173,7 +167,6 @@ async function runDraw() {
   msg.textContent = '⏳ جاري إجراء القرعة...';
   msg.className = 'mt-3 text-sm font-medium text-gray-500';
 
-  // get all non-admin users
   const { data: users } = await db
     .from('users')
     .select('id, name')
@@ -185,11 +178,9 @@ async function runDraw() {
     return;
   }
 
-  // Safe Shift: shuffle then shift by 1
   const shuffled = shuffle([...users]);
   const n = shuffled.length;
 
-  // Create new draw
   const { data: draw } = await db
     .from('draws')
     .insert({ status: 'active' })
@@ -211,7 +202,6 @@ async function runDraw() {
 }
 
 async function loadAdminAssignments() {
-  // get latest draw
   const { data: draws } = await db
     .from('draws')
     .select('id')
@@ -228,7 +218,6 @@ async function loadAdminAssignments() {
 
   if (!asgn) return;
 
-  // get all users
   const { data: users } = await db.from('users').select('id, name');
   const userMap = {};
   users.forEach(u => userMap[u.id] = u.name);
@@ -240,7 +229,7 @@ async function loadAdminAssignments() {
     div.className = 'flex justify-between items-center bg-gray-50 px-4 py-2 rounded-lg text-sm';
     div.innerHTML = `
       <span class="font-medium">${userMap[a.giver_id] || '؟'}</span>
-      <span class="text-green-500 font-bold">→ يهدي →</span>
+      <span class="text-green-500 font-bold">← يهدي ←</span>
       <span class="font-medium">${userMap[a.receiver_id] || '؟'}</span>
       <span class="${a.confirmed ? 'text-green-500' : 'text-gray-300'}">${a.confirmed ? '✔️' : '○'}</span>
     `;
@@ -255,7 +244,6 @@ async function showUser() {
   document.getElementById('userScreen').classList.remove('hidden');
   document.getElementById('userName').textContent = `👋 مرحباً ${currentUser.name}`;
 
-  // get latest draw
   const { data: draws } = await db
     .from('draws')
     .select('id')
@@ -282,7 +270,6 @@ async function showUser() {
 
   currentAssignment = asgn;
 
-  // get receiver info
   const { data: receiver } = await db
     .from('users')
     .select('name, gender, age')
@@ -290,9 +277,8 @@ async function showUser() {
     .single();
 
   document.getElementById('assignmentBox').classList.remove('hidden');
-  document.getElementById('receiverDisplay').textContent = receiver?.name || asgn.receiver_id;
+  document.getElementById('receiverDisplay').textContent = receiver?.name || '؟';
 
-  // prefill suggestion fields
   if (receiver) {
     document.getElementById('suggGender').value = receiver.gender || 'male';
     document.getElementById('suggAge').value = receiver.age || 25;
@@ -320,11 +306,11 @@ const giftDB = {
   male: {
     young:  ['⌚ ساعة أنيقة', '🎮 بطاقة ألعاب رقمية', '👟 حذاء رياضي', '📚 كتاب تطوير ذات', '🎧 سماعات لاسلكية'],
     mid:    ['👔 قميص رسمي فاخر', '🖊️ قلم فاخر', '💼 حقيبة عمل جلدية', '☕ ماكينة قهوة', '📖 كتاب أعمال ناجحة'],
-    senior: ['🌿 طقم عطور عود', '📿 سبحة فاخرة', '🍵 طقم شاي/قهوة', '🎋 نباتات منزلية', '🩴 شبشب جلد ناعم']
+    senior: ['🌿 طقم عطور عود', '📿 سبحة فاخرة', '🍵 طقم شاي وقهوة', '🎋 نباتات منزلية', '🩴 شبشب جلد ناعم']
   },
   female: {
     young:  ['💄 طقم مكياج', '👜 حقيبة يد صغيرة', '💍 إكسسوار عصري', '🌸 عطر خفيف', '🎀 قلادة ذهبية اللون'],
-    mid:    ['🧴 سيت عناية بالبشرة', '👒 وشاح فاخر', '🌺 باقة عطور مميزة', '🕯️ شمعة برائحة لافندر', '💅 طقم مناكير راقي'],
+    mid:    ['🧴 سيت عناية بالبشرة', '👒 وشاح فاخر', '🌺 باقة عطور مميزة', '🕯️ شمعة لافندر', '💅 طقم مناكير راقي'],
     senior: ['🌹 عطر عود نسائي', '🧣 شال ناعم', '📿 مسبحة كريستال', '🍫 شوكولاتة فاخرة', '🌿 زيوت عطرية طبيعية']
   }
 };
