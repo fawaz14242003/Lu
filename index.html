@@ -17,8 +17,6 @@
         .inp { width: 100%; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; text-align: center; font-size: 1.2rem; margin-bottom: 1rem; outline: none; }
         .hide { display: none !important; }
         .inner { background: #f1f5f9; padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; }
-        .spin { width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #10b981; border-radius: 50%; animation: s 1s linear infinite; margin: auto; }
-        @keyframes s { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -39,26 +37,24 @@
         <div class="inner">
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-2">أنت ستقوم بإهداء الرقم</p>
             <div id="el-target" class="text-5xl font-black text-emerald-600 mb-4"></div>
-            <button onclick="askAI()" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-4 py-2 rounded-full mb-3">استشاره ذكيه ✨</button>
-            <div id="ai-text" class="text-[10px] leading-relaxed text-right"></div>
         </div>
         <button onclick="markDelivered()" id="btn-del" class="btn">📦 تأكيد تسليم الهدية</button>
-        <div id="msg-ok" class="hide font-bold text-green-600">✅ تم التسليم!</div>
+        <div id="msg-ok" class="hide font-bold text-green-600 mt-4">✅ تم تسجيل التسليم!</div>
     </div>
-    <div id="zone-nodraw" class="py-10 text-slate-400">القرعة لم تبدأ بعد ⏳</div>
-    <button onclick="logout()" class="text-xs text-slate-400 mt-6">خروج</button>
+    <div id="zone-nodraw" class="py-10 text-slate-400 font-bold">القرعة لم تبدأ بعد ⏳</div>
+    <button onclick="logout()" class="text-xs text-slate-400 mt-6 font-bold">تسجيل الخروج</button>
 </div>
 
 <div id="s-admin" class="card hide text-center">
-    <h2 class="font-black mb-6">لوحة التحكم</h2>
+    <h2 class="font-black text-xl mb-6">لوحة التحكم ⚙️</h2>
     <div class="inner text-right text-xs">
-        <p class="font-bold mb-2">⚙️ إعدادات النظام:</p>
-        <p>• عدد المستخدمين: 6</p>
-        <p>• الدخول: بالأرقام فقط</p>
+        <p class="font-bold mb-2 text-slate-700">إعدادات النظام:</p>
+        <p class="text-slate-600">• عدد المستخدمين: 6</p>
+        <p class="text-slate-600">• طريقة الدخول: بالأرقام فقط</p>
     </div>
     <button class="btn mb-4" onclick="setupSystem()">🛠️ تهيئة الأرقام (1-6)</button>
     <button class="btn" onclick="runDraw()" id="btn-draw">🎲 إجراء القرعة الآن</button>
-    <button onclick="logout()" class="text-xs text-slate-400 mt-6">خروج</button>
+    <button onclick="logout()" class="text-xs text-slate-400 mt-6 font-bold">خروج المشرف</button>
 </div>
 
 <script>
@@ -69,15 +65,31 @@ const db = supabase.createClient(SURL, SKEY);
 async function login() {
     const code = document.getElementById("inp-code").value.trim();
     if(!code) return;
-    const { data: u } = await db.from('users').select('*').eq('code', code).single();
-    if(!u) { alert("الرقم غير مسجل!"); return; }
+    
+    document.getElementById("btn-login").innerText = "جاري الدخول...";
+
+    // ✨ الكود السحري: إنشاء حساب المشرف تلقائياً في قاعدة البيانات الفارغة
+    if (code === 'admin2026') {
+        const { data: checkAdmin } = await db.from('users').select('*').eq('code', 'admin2026').maybeSingle();
+        if (!checkAdmin) {
+            await db.from('users').insert([{ name: 'المشرف', code: 'admin2026', role: 'admin', gender: 'ذكر' }]);
+        }
+    }
+
+    const { data: u, error } = await db.from('users').select('*').eq('code', code).maybeSingle();
+    
+    if(error || !u) { 
+        alert("الرقم غير مسجل! تأكد أن المشرف قام بتهيئة النظام."); 
+        document.getElementById("btn-login").innerText = "دخول ←";
+        return; 
+    }
     
     document.getElementById("s-login").classList.add("hide");
     if(u.role === 'admin') {
         document.getElementById("s-admin").classList.remove("hide");
     } else {
         document.getElementById("s-member").classList.remove("hide");
-        document.getElementById("el-welcome").innerText = "مرحباً يا مستخدم رقم (" + u.name + ")";
+        document.getElementById("el-welcome").innerText = "مرحباً، مستخدم رقم (" + u.name + ")";
         loadResults(u.id);
     }
 }
@@ -90,42 +102,59 @@ async function loadResults(uid) {
         document.getElementById("zone-nodraw").classList.add("hide");
         document.getElementById("zone-result").classList.remove("hide");
         document.getElementById("el-target").innerText = asgn.receiver.name;
-        if(asgn.is_delivered) { document.getElementById("btn-del").classList.add("hide"); document.getElementById("msg-ok").classList.remove("hide"); }
+        if(asgn.is_delivered) { 
+            document.getElementById("btn-del").classList.add("hide"); 
+            document.getElementById("msg-ok").classList.remove("hide"); 
+        }
     }
 }
 
-// دالة لتهيئة الأرقام من 1 إلى 6 في قاعدة البيانات الجديدة
+// دالة لتهيئة الأرقام من 1 إلى 6 أوتوماتيكياً
 async function setupSystem() {
-    if(!confirm("سيتم مسح البيانات القديمة وتهيئة الأرقام من 1 إلى 6. هل أنت متأكد؟")) return;
+    if(!confirm("سيتم مسح أي أرقام قديمة وتهيئة النظام للمستخدمين (1 إلى 6). هل أنت متأكد؟")) return;
     
-    // 1. مسح القديم
+    // 1. مسح المستخدمين القدامى (ما عدا المشرف)
     await db.from('users').delete().neq('role', 'admin');
     
-    // 2. إضافة الأرقام
+    // 2. إضافة الأرقام من 1 إلى 6
     const users = [];
     for(let i=1; i<=6; i++) {
         users.push({ name: i.toString(), code: i.toString(), role: 'member', gender: 'ذكر' });
     }
-    await db.from('users').insert(users);
-    alert("تم تهيئة 6 مستخدمين بنجاح! 🚀");
+    const { error } = await db.from('users').insert(users);
+    
+    if(error) {
+        alert("حدث خطأ! تأكد من أنك عطلت الـ RLS في Supabase.");
+    } else {
+        alert("تم تجهيز النظام بنجاح! 🚀 الآن يمكن للمستخدمين الدخول بأرقامهم (1-6).");
+    }
 }
 
 async function runDraw() {
     if(!confirm("إجراء قرعة جديدة؟")) return;
     const { data: users } = await db.from('users').select('*').eq('role', 'member');
+    if (!users || users.length < 2) { alert("المستخدمين غير كافيين! اضغط على زر تهيئة الأرقام أولاً."); return; }
+    
     const { data: d } = await db.from('draws').insert({ month_name: 'سحب جديد' }).select().single();
     let sh = [...users].sort(() => Math.random() - 0.5);
-    let final = sh.map((u, i) => ({ draw_id: d.id, giver_id: sh[i].id, receiver_id: sh[(i + 1) % sh.length].id }));
+    
+    // خوارزمية السحب المضمونة (مستحيل شخص يطلع لنفسه)
+    let final = sh.map((u, i) => ({ 
+        draw_id: d.id, 
+        giver_id: sh[i].id, 
+        receiver_id: sh[(i + 1) % sh.length].id 
+    }));
+    
     await db.from('assignments').insert(final);
     alert("تمت القرعة بنجاح! 🎉");
 }
 
-function askAI() {
-    document.getElementById("ai-text").innerText = "بما أن المستخدمين أرقام، نقترح هدية محايدة مثل: شاحن متنقل، سماعة، أو بطاقة إهداء.";
-}
-
 function logout() { location.reload(); }
-function markDelivered() { alert("تم التأكيد!"); location.reload(); }
+async function markDelivered() { 
+    if(!confirm("هل أنت متأكد من تسليم الهدية؟")) return;
+    alert("بيض الله وجهك! تم التسجيل.");
+    location.reload(); 
+}
 </script>
 </body>
 </html>
